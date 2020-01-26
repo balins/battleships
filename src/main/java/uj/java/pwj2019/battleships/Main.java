@@ -3,13 +3,14 @@ package uj.java.pwj2019.battleships;
 import uj.java.pwj2019.battleships.client.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
-    static String host = "127.0.0.1";
+    static String host;
 
     public static void main(String[] args) {
         String sMode = null, sPort = null, sMap = null;
@@ -27,8 +28,7 @@ public class Main {
                     sPort = args[i+1];
                     break;
                 case "-map":
-                    //todo delete sMap = args[i+1];
-                    sMap = "./map";
+                    sMap = args[i+1];
                     break;
                 default:
                     System.err.println("Unsupported argument: \"" + args[i+1] + "\"");
@@ -62,8 +62,12 @@ public class Main {
         try {
             if(mode.equals(Mode.SERVER)) {
                 appClient = new Server(host, port, mapLines);
+                if(host == null)
+                    host = getPrivateIp();
             } else {
                 appClient = new Client(host, port, mapLines);
+                if(host == null)
+                    host = "127.0.0.1";
             }
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage() + " (" + e.getCause() + ")");
@@ -133,5 +137,25 @@ public class Main {
         }
 
         return mapLines;
+    }
+
+    private static String getPrivateIp() {
+        StringBuilder sb = new StringBuilder();
+        String command = "hostname -I | awk '{print $1}'";
+
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+
+            try (InputStream in = process.getInputStream()) {
+                int c;
+                while ((c = in.read()) != -1) {
+                    sb.append((char)c);
+                }
+            }
+
+            return sb.toString();
+        } catch (IOException e) {
+            return "127.0.0.1";
+        }
     }
 }

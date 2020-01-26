@@ -3,12 +3,18 @@ package uj.java.pwj2019.battleships.client;
 import uj.java.pwj2019.battleships.map.*;
 
 import java.io.*;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class AppClient {
     final String HOST;
     final int PORT;
+    BufferedReader input;
+    OutputStream output;
+    Socket socket;
     BattleshipsMap myMap;
     BattleshipsMap enemyMap;
     int myShipSegments;
@@ -43,38 +49,44 @@ public abstract class AppClient {
 
     public abstract void start() throws IOException, InterruptedException;
 
-    protected boolean startPlayLoop(Coordinate lastGuess, BufferedReader in, OutputStream out) throws IOException, InterruptedException {
+    protected boolean startPlayLoop(Coordinate lastGuess) throws IOException, InterruptedException {
+        this.input = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        this.output = socket.getOutputStream();
+        if(lastGuess != null) {
+            String msg = "start;" + lastGuess.toString() + "\n";
+            send(msg);
+        }
         String[] received;
         String response;
 
         while(true) {
             Thread animation = getAnimationPrinter();
             animation.start();
-            received = receive(in, out).split(";"); //blocking operation
+            received = receive().split(";"); //blocking operation
             animation.interrupt();
             animation.join();
 
             switch (received[0]) {
                 case "start":
-                    System.out.println("Let's begin!");
+                    System.out.println("Enemy: Let's begin!");
                     break;
                 case "miss":
                     markMyMiss(lastGuess);
-                    System.out.println("You've missed!");
+                    System.out.println("Enemy: You've missed!");
                     break;
                 case "hit":
                     markMyHit(lastGuess);
-                    System.out.println("I've been hit.");
+                    System.out.println("Enemy: I've been hit.");
                     break;
                 case "sunk":
                     markMySunk(lastGuess);
-                    System.out.println("Hit and sunk...");
+                    System.out.println("Enemy: Hit and sunk...");
                     break;
                 case "last sunk":
-                    markMySunk(lastGuess);
-                    System.out.println("Last sunk... You won...");
-                    in.close();
-                    out.close();
+                    markMyHit(lastGuess);
+                    System.out.println("Enemy: Last sunk... You won...");
+                    input.close();
+                    output.close();
                     return true;
                 default:
                     continue;
@@ -97,8 +109,8 @@ public abstract class AppClient {
                         break;
                     case "last sunk":
                         System.out.println("*Enemy has sunk your last ship :'(*");
-                        in.close();
-                        out.close();
+                        input.close();
+                        output.close();
                         return false;
                     default:
                         continue;
@@ -107,7 +119,7 @@ public abstract class AppClient {
                 lastGuess = getMyGuess();
                 response += ";" + lastGuess.toString();
 
-                send(response, in, out);
+                send(response);
             }
         }
     }
@@ -116,6 +128,8 @@ public abstract class AppClient {
         String guess;
         Coordinate c = null;
         boolean invalidInput = true;
+
+        printMaps();
 
         while(invalidInput) {
             System.out.print("Your guess: ");
@@ -138,17 +152,15 @@ public abstract class AppClient {
     }
 
     protected void win() {
-        System.out.println("Win");
-        enemyMap.print();
         System.out.println();
-        myMap.print();
+        System.out.println("--------------------------- Win ---------------------------");
+        printMaps();
     }
 
     protected void lose() {
-        System.out.println("Win");
-        enemyMap.print();
         System.out.println();
-        myMap.print();
+        System.out.println("--------------------------- Lose ---------------------------");
+        printMaps();
     }
 
     protected void markEnemyMiss(Coordinate c) {
@@ -167,12 +179,9 @@ public abstract class AppClient {
         enemyMap.mark(c, Field.HIT);
     }
 
-    protected void markEnemySunk(Coordinate c) {
-        uncoverSurroundingToSunk(c, enemyMap);
-    }
-
     protected void markMySunk(Coordinate c) {
-        myMap.mark(c, Field.HIT);
+        markMyHit(c);
+        uncoverSurroundingToSunk(c);
     }
 
     protected String proceedEnemyGuess(Coordinate c) {
@@ -184,83 +193,99 @@ public abstract class AppClient {
         } else if(myMap.getField(c).equals(Field.HIT)) {
             status = Status.HIT;
         } else { //Field.SHIP
-            myMap.mark(c, Field.HIT);
+            markEnemyHit(c);
             myShipSegments--;
 
             if (myShipSegments == 0) {
                 status = Status.LAST_SUNK;
             } else {
-                status = isSunk(c, myMap) ? Status.SUNK : Status.HIT;
+                status = isSunk(c) ? Status.SUNK : Status.HIT;
             }
         }
 
         return status.toString();
     }
 
-    protected void printMyMap() {
-        myMap.print();
+    protected void printMaps() {
+        System.out.println();
+        Field[] row;
+
+        System.out.println("\t     Opponent's map\t\t\t\t       Your map\n");
+        System.out.println("\t  1 2 3 4 5 6 7 8 9 10\t\t\t\t  1 2 3 4 5 6 7 8 9 10");
+
+        for (int i = 0; i < 10; i++) {
+            System.out.print("\t");
+
+            System.out.print((char)(i+65));
+            row = enemyMap.getRow(i);
+            for (var field : row)
+                System.out.print(" " + field.toString());
+
+            System.out.print("\t\t\t\t");
+
+            System.out.print((char)(i+65));
+            row = myMap.getRow(i);
+            for (var field : row)
+                System.out.print(" " + field.toString());
+
+            System.out.println();
+        }
+
+        System.out.println();
     }
 
-    protected void printEnemyMap() {
-        enemyMap.print();
-    }
-
-    private boolean isSunk(Coordinate c, BattleshipsMap map) {
-        FieldExplorer explorer = new SunkChecker(c, map);
+    private boolean isSunk(Coordinate c) {
+        FieldExplorer explorer = new SunkChecker(c, myMap);
 
         return explorer.traverse();
     }
 
-    private void uncoverSurroundingToSunk(Coordinate c, BattleshipsMap map) {
-        FieldExplorer explorer = new SurroundingChecker(c, map);
+    private void uncoverSurroundingToSunk(Coordinate c) {
+        FieldExplorer explorer = new SurroundingChecker(c, enemyMap);
 
         explorer.traverse();
     }
 
-    protected String receive(BufferedReader in, OutputStream out) throws IOException, InterruptedException {
+    protected String receive() throws IOException, InterruptedException {
         String received;
 
-        do {
-            received = in.readLine(); //blocking operation (waits timeout ms)
-        } while(received.equals("ACK"));
+        received = input.readLine(); //blocking operation
 
-        send("ACK", in, out); //send acknowledgement
+        send("ACK"); //send acknowledgement
 
-        return received.trim();
+        return received;
     }
 
-    protected void send(String message, BufferedReader in, OutputStream out) throws IOException, InterruptedException {
-        out.write((message + "\n").getBytes());
-        out.flush();
+    protected void send(String message) throws IOException, InterruptedException {
+        output.write((message + "\n").getBytes());
+        output.flush();
 
-//        if(!message.equals("ACK")) { //wait for acknowledgement
-//            int timeoutExpired = 0;
-//
-//            while(timeoutExpired < 3) {
-//                Thread th = new Thread(() -> {
-//                    try {
-//                        receive(in, out);
-//                    } catch (IOException | InterruptedException ignored) {}
-//                });
-//                th.start();
-//                Thread.sleep(10000);
-//                if(th.isAlive()) {
-//                    th.interrupt();
-//                    timeoutExpired++;
-//                    out.write(message.getBytes()); //retry sending message
-//                    out.flush();
-//                } else {
-//                    return;
-//                }
-//            }
-//
-//            throw new SocketTimeoutException("Communication error");
-//        }
+        if(!message.equals("ACK")) { //wait for acknowledgement
+            int timeoutExpired = 0;
+            socket.setSoTimeout(1000);
+
+            while(true) {
+                try {
+                    receive();
+                    break;
+                } catch (IOException e) {
+                    timeoutExpired++;
+                    if(timeoutExpired == 3) {
+                        socket.setSoTimeout(0);
+                        throw new SocketTimeoutException("Communication error");
+                    } else {
+                        output.write((message + "\n").getBytes()); //retry sending message
+                        output.flush();
+                    }
+                }
+            }
+
+            socket.setSoTimeout(0);
+        }
     }
 
     protected Thread getAnimationPrinter() {
         return new Thread(() -> {
-            int chars = 0;
             String text = "waiting for your opponent's move...";
             boolean lower = true;
             int randomNum;
@@ -273,7 +298,6 @@ public abstract class AppClient {
                         Thread.sleep(randomNum);
 
                         System.out.write(text.substring(i,i+1).getBytes());
-                        chars++;
                     }
 
                     randomNum = ThreadLocalRandom.current().nextInt(666, 888);
@@ -281,16 +305,15 @@ public abstract class AppClient {
 
                     for(int i = 0; i < text.length(); i++) {
                         System.out.write("\b".getBytes());
-                        chars--;
                     }
 
                     lower = !lower;
                 }
             } catch (IOException | InterruptedException ignored) {
                 try {
-                    for(int i = 0; i < chars; i++) {
-                        System.out.write("\b".getBytes());
-                    }
+                    System.out.write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b".getBytes());
+                    System.out.write("                                   ".getBytes());
+                    System.out.write("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b".getBytes());
                 } catch (IOException ignored2){}
             }
         });

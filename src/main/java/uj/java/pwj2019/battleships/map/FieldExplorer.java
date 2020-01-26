@@ -25,7 +25,6 @@ public abstract class FieldExplorer {
             Arrays.fill(row, false);
 
         int row, col;
-        Stack<Coordinate> stack = new Stack<>();
         Coordinate c;
         boolean shouldContinue;
 

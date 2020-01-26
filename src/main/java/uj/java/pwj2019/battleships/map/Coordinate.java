@@ -14,7 +14,8 @@ public class Coordinate {
         if(row < 65 || (row > 74 && row < 97) || row > 106)
             throw new IllegalArgumentException("Row has to be a letter [Aa-Jj]. Got " + row);
         if(col < 0 || col > 9)
-            throw new IllegalArgumentException("Column has to be an integer value in the range between 1 and 10. Got " + col+1);
+            throw new IllegalArgumentException("Column has to be an integer value in the range between 1 and 10. " +
+                    "Got " + (col+1));
 
         this.row = row < 97 ? row - 65 : row - 97;
         this.col = col;
@@ -22,9 +23,11 @@ public class Coordinate {
 
     public Coordinate(int row, int col) throws IllegalArgumentException {
         if(row < 0 || row > 9)
-            throw new IllegalArgumentException("Row has to be an integer value in the range between 0 and 9. Got " + row);
+            throw new IllegalArgumentException("Row has to be an integer value in the range between 0 and 9. " +
+                    "Got " + row);
         if(col < 0 || col > 9)
-            throw new IllegalArgumentException("Column has to be an integer value in the range between 0 and 9. Got " + col);
+            throw new IllegalArgumentException("Column has to be an integer value in the range between 0 and 9. " +
+                    "Got " + col);
 
         this.row = row;
         this.col = col;

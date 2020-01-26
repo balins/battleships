@@ -40,5 +40,9 @@ public class BattleshipsMap {
         }
     }
 
+    public Field[] getRow(int i) {
+        return map[i];
+    }
+
 
 }
