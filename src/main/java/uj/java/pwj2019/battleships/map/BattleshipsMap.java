@@ -23,6 +23,24 @@ public class BattleshipsMap {
         }
     }
 
+    public void mark(Coordinate c, Field status) {
+        map[c.getRow()][c.getCol()] = status;
+    }
+
+    public void print() {
+        for(var row : map){
+            for(var field : row) {
+                System.out.print(field.toString());
+            }
+
+            System.out.println();
+        }
+    }
+
+    public Field getField(Coordinate c) {
+        return map[c.getRow()][c.getCol()];
+    }
+
     private Field[][] convertMap(List<String> mapLines) throws IllegalArgumentException {
         Field[][] map = new Field[10][10];
         int shipFieldsCount = 0;

@@ -1,7 +1,7 @@
 package uj.java.pwj2019.battleships.map;
 
 public enum Field {
-    WATER("."), SHIP("#"), MISS("~"), HIT("@"), SUNK("!"), UNKNOWN("?");
+    WATER("."), SHIP("#"), MISS("~"), HIT("@"), UNKNOWN("?");
 
     private String repr;
 

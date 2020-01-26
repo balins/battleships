@@ -2,6 +2,7 @@ package uj.java.pwj2019.battleships.client;
 
 import uj.java.pwj2019.battleships.map.BattleshipsMap;
 import uj.java.pwj2019.battleships.map.Coordinate;
+import uj.java.pwj2019.battleships.map.Field;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -99,44 +100,119 @@ public abstract class AppClient {
     }
 
     protected void win() {
-        //todo implement
+        System.out.println("Win");
+        enemyMap.print();
+        System.out.println();
+        myMap.print();
     }
 
     protected void lose() {
-        //todo implement
+        System.out.println("Win");
+        enemyMap.print();
+        System.out.println();
+        myMap.print();
     }
 
     protected void markEnemyMiss(Coordinate c) {
-        //todo implement
+        myMap.mark(c, Field.MISS);
     }
 
     protected void markMyMiss(Coordinate c) {
-        //todo implement
+        enemyMap.mark(c, Field.MISS);
     }
 
     protected void markEnemyHit(Coordinate c) {
-        //todo implement
+        myMap.mark(c, Field.HIT);
     }
 
     protected void markMyHit(Coordinate c) {
-        //todo implement
+        enemyMap.mark(c, Field.HIT);
     }
 
     protected void markEnemySunk(Coordinate c) {
-        //todo implement
+        uncoverSurroundingToSunk(c, enemyMap);
     }
 
     protected void markMySunk(Coordinate c) {
-        //todo implement
+        myMap.mark(c, Field.HIT);
     }
 
     protected String proceedEnemyGuess(Coordinate c) {
-        //todo implement
+        if(myMap.getField(c).equals(Field.WATER) || myMap.getField(c).equals(Field.MISS)) {
+            markEnemyMiss(c);
+        } else {
+            markEnemyHit(c);
+            //todo check if sunk
+        }
+
         return null;
     }
 
     protected void printMyMap() {
-        //todo implement
+        myMap.print();
+    }
+
+    protected void printEnemyMap() {
+        enemyMap.print();
+    }
+
+    private void uncoverSurroundingToSunk(Coordinate c, BattleshipsMap map) {
+        boolean[][] visited = new boolean[10][10];
+        for(var row : visited)
+            Arrays.fill(row, false);
+        int row, col;
+        Stack<Coordinate> stack = new Stack<>();
+
+        stack.push(c);
+
+        while(!stack.empty()) {
+            c = stack.pop();
+            row = c.getRow();
+            col = c.getCol();
+            visited[row][col] = true;
+            Coordinate neighbor;
+
+            if(row > 0) {
+                if(!visited[row-1][col]) {
+                    neighbor = new Coordinate(row-1, col);
+                    if (map.getField(neighbor).equals(Field.HIT)) {
+                        stack.push(neighbor);
+                    } else if(map.getField(neighbor).equals(Field.UNKNOWN)) {
+                        map.mark(neighbor, Field.WATER);
+                    }
+                }
+            }
+            if(row < 9) {
+                if(!visited[row+1][col]) {
+                    neighbor = new Coordinate(row+1, col);
+                    if (map.getField(neighbor).equals(Field.HIT)) {
+                        stack.push(neighbor);
+                    } else if(map.getField(neighbor).equals(Field.UNKNOWN)) {
+                        map.mark(neighbor, Field.WATER);
+                    }
+                }
+            }
+            if(col > 0) {
+                if(!visited[row][col-1]) {
+                    neighbor = new Coordinate(row, col-1);
+                    if (map.getField(neighbor).equals(Field.HIT)) {
+                        stack.push(neighbor);
+                    } else if(map.getField(neighbor).equals(Field.UNKNOWN)) {
+                        map.mark(neighbor, Field.WATER);
+                    }
+                }
+            }
+            if(col < 9) {
+                if(!visited[row][col+1]) {
+                    neighbor = new Coordinate(row, col+1);
+                    if (map.getField(neighbor).equals(Field.HIT)) {
+                        stack.push(neighbor);
+                    } else if(map.getField(neighbor).equals(Field.UNKNOWN)) {
+                        map.mark(neighbor, Field.WATER);
+                    }
+                }
+            }
+        }
     }
 
     protected String receive(int timeout, Socket socket) throws IOException {
