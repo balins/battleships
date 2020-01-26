@@ -2,35 +2,44 @@ package uj.java.pwj2019.battleships.client;
 
 import uj.java.pwj2019.battleships.map.Coordinate;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class Client extends AppClient {
-    final String HOST;
+    private Client(){};
 
     public Client(String host, int port, List<String> mapLines) {
-        super(port, mapLines);
-        this.HOST = host;
+        super(host, port, mapLines);
     }
 
     @Override
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         System.out.println("Connecting to other player on " + HOST + ", port " + PORT + "...");
 
         Socket socket = new Socket(HOST, PORT);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        OutputStream out = socket.getOutputStream();
 
         Coordinate lastGuess = getMyGuess();
-        send("start;" + lastGuess.toString(), socket);
+        String msg = "start;" + lastGuess.toString() + "\n";
+        send(msg, in, out);
 
-        boolean win = startPlayLoop(socket, lastGuess);
-
-        socket.close();
+        boolean win = startPlayLoop(lastGuess, in, out);
 
         if(win) {
             win();
         } else {
             lose();
         }
+
+        in.close();
+        out.close();
+
+        socket.close();
     }
 }

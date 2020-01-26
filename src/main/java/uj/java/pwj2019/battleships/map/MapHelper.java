@@ -43,8 +43,8 @@ public class MapHelper {
         int row, col, currentLen;
         Stack<Coordinate> stack = new Stack<>();
 
-        for(int i = 0; i < map.length; i++) {   //find all of the ships on the map
-            for(int j = 0; j < map[i].length; j++) {
+        for(int i = 0; i < 10; i++) {   //find all of the ships on the map
+            for(int j = 0; j < 10; j++) {
                 if(map[i][j].equals(Field.WATER) || visited[i][j])
                     continue;
 
@@ -65,7 +65,7 @@ public class MapHelper {
                             stack.push(new Coordinate(row-1, col));
                         }
                     }
-                    if(row < map.length-1) {
+                    if(row < 9) {
                         if(map[row+1][col].equals(Field.SHIP) && !visited[row+1][col]) {
                             stack.push(new Coordinate(row+1, col));
                         }
@@ -75,7 +75,7 @@ public class MapHelper {
                             stack.push(new Coordinate(row, col-1));
                         }
                     }
-                    if(col < map[i].length-1) {
+                    if(col < 9) {
                         if(map[row][col+1].equals(Field.SHIP) && !visited[row][col+1]) {
                             stack.push(new Coordinate(row, col+1));
                         }
@@ -92,6 +92,6 @@ public class MapHelper {
             }
         }
 
-        return len[0] == 4 && len[1] == 3 && len[3] == 2;
+        return len[0] == 4 && len[1] == 3 && len[2] == 2;
     }
 }

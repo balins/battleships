@@ -14,23 +14,24 @@ public class Main {
     public static void main(String[] args) {
         String sMode = null, sPort = null, sMap = null;
 
-        for(var arg : args) {
-            var kv = arg.toLowerCase().split("\\s+");
-            switch(kv[0]) {
+        for(int i = 0; i < args.length-1; i+=2) {
+            var key = args[i].toLowerCase();
+            switch(key) {
                 case "-mode":
-                    sMode = kv[1];
+                    sMode = args[i+1];
                     break;
                 case "-host":
-                    host = kv[1];
+                    host = args[i+1];
                     break;
                 case "-port":
-                    sPort = kv[1];
+                    sPort = args[i+1];
                     break;
                 case "-map":
-                    sMap = kv[1];
+                    //todo delete sMap = args[i+1];
+                    sMap = "./map";
                     break;
                 default:
-                    System.err.println("Unsupported argument: \"" + kv[0] + "\"");
+                    System.err.println("Unsupported argument: \"" + args[i+1] + "\"");
             }
         }
 
@@ -60,19 +61,19 @@ public class Main {
 
         try {
             if(mode.equals(Mode.SERVER)) {
-                appClient = new Server(port, mapLines);
+                appClient = new Server(host, port, mapLines);
             } else {
                 appClient = new Client(host, port, mapLines);
             }
         } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
+            System.err.println(e.getMessage() + " (" + e.getCause() + ")");
             System.err.println("Shutting down the application...");
             System.exit(-1);
         }
 
         try {
             appClient.start();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             System.err.println(e.getMessage());
             System.err.println("Shutting down the application...");
             System.exit(-1);
@@ -126,7 +127,7 @@ public class Main {
                 }
             }
         } catch (IOException e) {
-            throw new IllegalArgumentException("The map location: " + pathToMap.toAbsolutePath()
+            throw new IllegalArgumentException("The map location: " + pathToMap.toAbsolutePath().normalize().toString()
                     + " is not available for the app.\n" +
                     "Please make sure that the path is correct and the file is accessible.");
         }

@@ -2,22 +2,24 @@ package uj.java.pwj2019.battleships.client;
 
 import uj.java.pwj2019.battleships.map.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class AppClient {
+    final String HOST;
     final int PORT;
     BattleshipsMap myMap;
     BattleshipsMap enemyMap;
     int myShipSegments;
 
-    protected AppClient(int port, List<String> mapLines) throws IllegalArgumentException {
+    protected AppClient(){
+        HOST = "";
+        PORT = 0;
+    };
+
+    protected AppClient(String host, int port, List<String> mapLines) throws IllegalArgumentException {
+        this.HOST = host;
         this.PORT = port;
         this.myMap = new BattleshipsMap(mapLines);
         this.enemyMap = new BattleshipsMap();
@@ -39,17 +41,18 @@ public abstract class AppClient {
         }
     }
 
-    public abstract void start() throws IOException;
+    public abstract void start() throws IOException, InterruptedException;
 
-    protected boolean startPlayLoop(Socket socket, Coordinate lastGuess) throws IOException {
+    protected boolean startPlayLoop(Coordinate lastGuess, BufferedReader in, OutputStream out) throws IOException, InterruptedException {
         String[] received;
         String response;
-        Thread animation = getAnimationPrinter();
 
         while(true) {
+            Thread animation = getAnimationPrinter();
             animation.start();
-            received = receive(0, socket).split(";", 2); //blocking operation
+            received = receive(in, out).split(";"); //blocking operation
             animation.interrupt();
+            animation.join();
 
             switch (received[0]) {
                 case "start":
@@ -61,15 +64,17 @@ public abstract class AppClient {
                     break;
                 case "hit":
                     markMyHit(lastGuess);
-                    System.out.println("I've been hit!");
+                    System.out.println("I've been hit.");
                     break;
                 case "sunk":
                     markMySunk(lastGuess);
-                    System.out.println("Hit and sunk!");
+                    System.out.println("Hit and sunk...");
                     break;
                 case "last sunk":
                     markMySunk(lastGuess);
-                    System.out.println("Last sunk! You won.");
+                    System.out.println("Last sunk... You won...");
+                    in.close();
+                    out.close();
                     return true;
                 default:
                     continue;
@@ -80,16 +85,29 @@ public abstract class AppClient {
                 System.out.println("Enemy: " + c.toString());
                 response = proceedEnemyGuess(c);
 
-                if(!response.equals("last sunk")) {
-                    lastGuess = getMyGuess();
-                    response += ";" + lastGuess.toString();
-                } else {
-                    return false;
+                switch(response) {
+                    case "miss":
+                        System.out.println("*Enemy has missed!*");
+                        break;
+                    case "hit":
+                        System.out.println("*Enemy has hit your ship :/*");
+                        break;
+                    case "sunk":
+                        System.out.println("*Enemy has sunk your ship :(*");
+                        break;
+                    case "last sunk":
+                        System.out.println("*Enemy has sunk your last ship :'(*");
+                        in.close();
+                        out.close();
+                        return false;
+                    default:
+                        continue;
                 }
 
-                response += "\n";
+                lastGuess = getMyGuess();
+                response += ";" + lastGuess.toString();
 
-                send(response, socket);
+                send(response, in, out);
             }
         }
     }
@@ -100,14 +118,19 @@ public abstract class AppClient {
         boolean invalidInput = true;
 
         while(invalidInput) {
-            System.out.println("Your guess: ");
+            System.out.print("Your guess: ");
             invalidInput = false;
             guess = new Scanner(System.in).nextLine();
+            if(guess == null || guess.equals("")) {
+                invalidInput = true;
+                System.out.println("You have to enter row and column of chosen field. Retry.");
+                continue;
+            }
             try {
                 c = new Coordinate(guess);
             } catch (IllegalArgumentException e) {
                 invalidInput = true;
-                System.out.println(e.getMessage() + " Retry.");
+                System.out.println(e.getMessage() + ". Retry.");
             }
         }
         
@@ -194,71 +217,82 @@ public abstract class AppClient {
         explorer.traverse();
     }
 
-    protected String receive(int timeout, Socket socket) throws IOException {
+    protected String receive(BufferedReader in, OutputStream out) throws IOException, InterruptedException {
         String received;
-        socket.setSoTimeout(timeout);
 
-        send("ACK", socket); //send acknowledgement
-
-        try(BufferedReader in = new BufferedReader(
-                new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8)
-        )) {
+        do {
             received = in.readLine(); //blocking operation (waits timeout ms)
-        }
+        } while(received.equals("ACK"));
+
+        send("ACK", in, out); //send acknowledgement
 
         return received.trim();
     }
 
-    protected void send(String message, Socket socket) throws IOException {
-        try(OutputStream out = socket.getOutputStream()) {
-            out.write(message.getBytes());
-            if(message.equals("ACK")) out.flush(); //send asap if the message was acknowledgement
-        }
+    protected void send(String message, BufferedReader in, OutputStream out) throws IOException, InterruptedException {
+        out.write((message + "\n").getBytes());
+        out.flush();
 
-        if(!message.equals("ACK")) { //wait for acknowledgement
-            int timeoutExpired = 0;
-
-            while(timeoutExpired < 3) {
-                try {
-                    receive(1000, socket);
-                    return;
-                } catch (IOException e) {
-                    timeoutExpired++;
-                    try(OutputStream out = socket.getOutputStream()) {
-                        out.write(message.getBytes()); //retry sending message
-                    }
-                }
-            }
-
-            throw new SocketTimeoutException("Communication error");
-        }
+//        if(!message.equals("ACK")) { //wait for acknowledgement
+//            int timeoutExpired = 0;
+//
+//            while(timeoutExpired < 3) {
+//                Thread th = new Thread(() -> {
+//                    try {
+//                        receive(in, out);
+//                    } catch (IOException | InterruptedException ignored) {}
+//                });
+//                th.start();
+//                Thread.sleep(10000);
+//                if(th.isAlive()) {
+//                    th.interrupt();
+//                    timeoutExpired++;
+//                    out.write(message.getBytes()); //retry sending message
+//                    out.flush();
+//                } else {
+//                    return;
+//                }
+//            }
+//
+//            throw new SocketTimeoutException("Communication error");
+//        }
     }
 
     protected Thread getAnimationPrinter() {
-        Runnable animation = () -> {
+        return new Thread(() -> {
             int chars = 0;
-
+            String text = "waiting for your opponent's move...";
+            boolean lower = true;
+            int randomNum;
             try {
-                System.out.write("Enemy: ".getBytes());
-
                 while(true) {
-                    for(int i = 0; i < 3; i++) {
-                        Thread.sleep(1000);
-                        System.out.write(".".getBytes());
+                    text = lower ? text.toLowerCase() : text.toUpperCase();
+
+                    for(int i = 0; i < text.length(); i++) {
+                        randomNum = ThreadLocalRandom.current().nextInt(44, 777);
+                        Thread.sleep(randomNum);
+
+                        System.out.write(text.substring(i,i+1).getBytes());
                         chars++;
                     }
-                    Thread.sleep(1000);
-                    for(int i = 0; i < 3; i++) {
-                        System.out.print("\b");
+
+                    randomNum = ThreadLocalRandom.current().nextInt(666, 888);
+                    Thread.sleep(randomNum);
+
+                    for(int i = 0; i < text.length(); i++) {
+                        System.out.write("\b".getBytes());
                         chars--;
                     }
+
+                    lower = !lower;
                 }
             } catch (IOException | InterruptedException ignored) {
-                for(int i = 0; i < chars; i++)
-                    System.out.print("\b");
+                try {
+                    for(int i = 0; i < chars; i++) {
+                        System.out.write("\b".getBytes());
+                    }
+                } catch (IOException ignored2){}
             }
-        };
-
-        return new Thread(animation);
+        });
     }
 }
