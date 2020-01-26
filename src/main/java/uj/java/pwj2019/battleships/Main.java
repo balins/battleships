@@ -1,5 +1,7 @@
 package uj.java.pwj2019.battleships;
 
+import uj.java.pwj2019.battleships.client.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
+    static String host = "127.0.0.1";
 
     public static void main(String[] args) {
         String sMode = null, sPort = null, sMap = null;
@@ -16,6 +19,9 @@ public class Main {
             switch(kv[0]) {
                 case "-mode":
                     sMode = kv[1];
+                    break;
+                case "-host":
+                    host = kv[1];
                     break;
                 case "-port":
                     sPort = kv[1];
@@ -56,7 +62,7 @@ public class Main {
             if(mode.equals(Mode.SERVER)) {
                 appClient = new Server(port, mapLines);
             } else {
-                appClient = new Client(port, mapLines);
+                appClient = new Client(host, port, mapLines);
             }
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());

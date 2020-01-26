@@ -1,4 +1,4 @@
-package uj.java.pwj2019.battleships;
+package uj.java.pwj2019.battleships.map;
 
 import java.util.Arrays;
 import java.util.List;
