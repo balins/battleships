@@ -1,5 +1,6 @@
 _Autorem specyfikacji jest [@areksokolowski](https://gitlab.com/areksokolowski)_
-_Zostala ona nieco zmodyfikowana ze względu na to, że poszerzyłem nieco funkcjonalność aplikacji_
+
+_Została ona zmodyfikowana ze względu na poszerzenie funkcjonalności aplikacji_
 
 ## Gra w okręty
 
