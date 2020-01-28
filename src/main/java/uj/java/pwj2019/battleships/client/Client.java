@@ -9,19 +9,18 @@ import java.util.List;
 public class Client extends AppClient {
     private Client(){};
 
-    public Client(String host, int port, List<String> mapLines) {
+    public Client(String host, int port, List<String> mapLines) throws IOException {
         super(host, port, mapLines);
+        this.communicator = new Communicator(new Socket(HOST, PORT));
     }
 
     @Override
     public void start() throws IOException, InterruptedException {
-        System.out.println("Connecting to other player on " + HOST + ", port " + PORT + "...");
+        System.out.println("\nConnected to other player!");
 
-        this.socket = new Socket(HOST, PORT);
+        Coordinate myGuess = getMyGuess();
 
-        Coordinate lastGuess = getMyGuess();
-
-        boolean win = startPlayLoop(lastGuess);
+        boolean win = startPlayLoop(myGuess);
 
         if(win) {
             win();
@@ -29,6 +28,6 @@ public class Client extends AppClient {
             lose();
         }
 
-        socket.close();
+        communicator.close();
     }
 }

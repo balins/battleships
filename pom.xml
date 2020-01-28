@@ -4,7 +4,7 @@
   <groupId>uj.java.pwj2019</groupId>
   <artifactId>battleships</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <name>battleships</name>
   <url>http://maven.apache.org</url>
   <dependencies>

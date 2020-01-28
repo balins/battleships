@@ -3,10 +3,7 @@ package uj.java.pwj2019.battleships;
 import uj.java.pwj2019.battleships.client.*;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.net.SocketException;
 import java.util.List;
 
 public class Main {
@@ -50,9 +47,9 @@ public class Main {
         AppClient appClient = null;
 
         try {
-            mode = parseMode(sMode);
-            port = parsePort(sPort);
-            mapLines = loadMap(sMap);
+            mode = InitHelper.parseMode(sMode);
+            port = InitHelper.parsePort(sPort);
+            mapLines = InitHelper.loadMap(sMap);
         } catch (IllegalArgumentException e) {
             System.err.println("Application can not be started due to following error:");
             System.err.println(e.getMessage());
@@ -60,16 +57,21 @@ public class Main {
         }
 
         try {
-            if(mode.equals(Mode.SERVER)) {
-                appClient = new Server(host, port, mapLines);
+            if(mode == Mode.SERVER) {
                 if(host == null)
-                    host = getPrivateIp();
+                    host = InitHelper.getPrivateIp();
+                appClient = new Server(host, port, mapLines);
             } else {
-                appClient = new Client(host, port, mapLines);
                 if(host == null)
                     host = "127.0.0.1";
+                appClient = new Client(host, port, mapLines);
             }
+        } catch (IOException ioe) {
+            System.err.println("\nCould not connect to host " + host + " at port " + port);
+            System.err.println("Shutting down the application...");
+            System.exit(-1);
         } catch (IllegalArgumentException e) {
+            System.err.println("\nCould not start the game");
             System.err.println(e.getMessage() + " (" + e.getCause() + ")");
             System.err.println("Shutting down the application...");
             System.exit(-1);
@@ -77,85 +79,16 @@ public class Main {
 
         try {
             appClient.start();
+        } catch (NullPointerException | SocketException e) {
+            System.err.println("\nYour opponent has disconnected");
+            System.err.println("Shutting down the application...");
+            System.exit(-1);
         } catch (IOException | InterruptedException e) {
+            System.err.println("\nAn error occurred:");
             System.err.println(e.getMessage());
             System.err.println("Shutting down the application...");
             System.exit(-1);
         }
-    }
 
-    private static Mode parseMode(String sMode) throws IllegalArgumentException {
-        Mode mode;
-        if(sMode.equalsIgnoreCase("server")) {
-            mode = Mode.SERVER;
-        } else if(sMode.equalsIgnoreCase("client")) {
-            mode = Mode.CLIENT;
-        } else {
-            throw new IllegalArgumentException("Given mode is unsupported: \"" + sMode + "\"");
-        }
-
-        return mode;
-    }
-
-    private static int parsePort(String sPort) throws IllegalArgumentException {
-        int port;
-        try {
-            port = Integer.parseInt(sPort);
-            if(port < 1024 || port > 49151) {
-                throw new IllegalArgumentException("Port number is invalid. " +
-                        "You have to use a port in the range between 1024 and 49151. Got " + sPort);
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Port number is invalid. " +
-                    "You have to provide an integer value in the range between 1024 and 49151. Got " + sPort);
-        }
-
-        return port;
-    }
-
-    private static List<String> loadMap(String sMap) throws IllegalArgumentException {
-        List<String> mapLines;
-        Path pathToMap = Paths.get(sMap);
-        try {
-            mapLines = Files.readAllLines(pathToMap);
-
-            if (mapLines.size() != 10) {
-                throw new IllegalArgumentException("Dimensions of the provided map are invalid. " +
-                        "Map should consist of 10 rows. Got " + mapLines.size());
-            }
-
-            for(var line : mapLines) {
-                if (line.length() != 10) {
-                    throw new IllegalArgumentException("Dimensions of the provided map are invalid. " +
-                            "Each row should consist of 10 columns. Got " + line.length());
-                }
-            }
-        } catch (IOException e) {
-            throw new IllegalArgumentException("The map location: " + pathToMap.toAbsolutePath().normalize().toString()
-                    + " is not available for the app.\n" +
-                    "Please make sure that the path is correct and the file is accessible.");
-        }
-
-        return mapLines;
-    }
-
-    private static String getPrivateIp() {
-        StringBuilder sb = new StringBuilder();
-        String command = "hostname -I | awk '{print $1}'";
-
-        try {
-            Process process = Runtime.getRuntime().exec(command);
-
-            try (InputStream in = process.getInputStream()) {
-                int c;
-                while ((c = in.read()) != -1) {
-                    sb.append((char)c);
-                }
-            }
-
-            return sb.toString();
-        } catch (IOException e) {
-            return "127.0.0.1";
-        }
     }
 }

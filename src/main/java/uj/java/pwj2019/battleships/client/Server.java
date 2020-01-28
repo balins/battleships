@@ -15,10 +15,10 @@ public class Server extends AppClient {
     public void start() throws IOException, InterruptedException {
         ServerSocket serverSocket = new ServerSocket(PORT);
 
-        System.out.println("Waiting for connection from other player on "
+        System.out.println("\nWaiting for connection from other player on "
                 + HOST + ", port " + PORT + "...\n");
 
-        this.socket = serverSocket.accept(); //blocking operation
+        this.communicator = new Communicator(serverSocket.accept()); //blocking operation
 
         boolean win = startPlayLoop(null);
 
@@ -28,6 +28,6 @@ public class Server extends AppClient {
             lose();
         }
 
-        socket.close();
+        communicator.close();
     }
 }

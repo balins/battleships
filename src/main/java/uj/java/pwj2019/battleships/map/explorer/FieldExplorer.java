@@ -1,14 +1,17 @@
-package uj.java.pwj2019.battleships.map;
+package uj.java.pwj2019.battleships.map.explorer;
+
+import uj.java.pwj2019.battleships.map.GameMap;
+import uj.java.pwj2019.battleships.map.Coordinate;
 
 import java.util.Arrays;
 import java.util.Stack;
 
 public abstract class FieldExplorer {
-    final BattleshipsMap map;
+    final GameMap map;
     final boolean[][] visited;
     final Stack<Coordinate> stack;
 
-    protected FieldExplorer(Coordinate start, BattleshipsMap map) {
+    protected FieldExplorer(Coordinate start, GameMap map) {
         this.map = map;
         this.visited = new boolean[10][10];
         for(var row : visited)
@@ -19,13 +22,14 @@ public abstract class FieldExplorer {
 
     abstract boolean proceed(Coordinate c);
 
-    public boolean traverse() {
+    public boolean traverse() { //returns boolean value for SunkChecker, return value for SurroundingChecker is ignored
         boolean[][] visited = new boolean[10][10];
         for(var row : visited)
             Arrays.fill(row, false);
 
-        int row, col;
+
         Coordinate c;
+        int row, col;
         boolean shouldContinue;
 
         while(!stack.empty()) {

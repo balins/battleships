@@ -3,23 +3,21 @@ package uj.java.pwj2019.battleships.map;
 import java.util.Arrays;
 import java.util.List;
 
-public class BattleshipsMap {
+public class GameMap {
     final Field[][] map;
 
-    public BattleshipsMap() {
+    public GameMap() {
         this.map = new Field[10][10];
 
         for(var row : map)
             Arrays.fill(row, Field.UNKNOWN);
     }
 
-    public BattleshipsMap(List<String> mapLines) throws IllegalArgumentException {
-        this.map = MapHelper.convertMap(mapLines);
-
-        if(!MapHelper.isValid(map)) {
+    public GameMap(List<String> mapLines) throws IllegalArgumentException {
+        this.map = MapInitHelper.convertMap(mapLines);
+        if(!MapInitHelper.isValid(map))
             throw new IllegalArgumentException("Format of the provided map is invalid. " +
                     "Please, read the rules of ships placement provided with the app and then correct your map.");
-        }
     }
 
     public Field getField(Coordinate c) {
@@ -30,19 +28,7 @@ public class BattleshipsMap {
         map[c.getRow()][c.getCol()] = status;
     }
 
-    public void print() {
-        for(var row : map){
-            for(var field : row) {
-                System.out.print(field.toString());
-            }
-
-            System.out.println();
-        }
-    }
-
     public Field[] getRow(int i) {
         return map[i];
     }
-
-
 }

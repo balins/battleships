@@ -3,14 +3,15 @@ package uj.java.pwj2019.battleships.map;
 public class Coordinate {
     private final int row; //0..9
     private final int col; //0..9
-    int shift = 0;
 
     public Coordinate(String rc) throws IllegalArgumentException {
-        this(rc.charAt(0), Integer.parseInt(rc.substring(1))-1);
-        shift = 1;
-    }
+        if(rc == null || rc.equals(""))
+            throw new IllegalArgumentException("You have to provide both row and column of chosen field");
 
-    public Coordinate(char row, int col) throws IllegalArgumentException {
+        int row = rc.charAt(0);
+        int col = Integer.parseInt(rc.substring(1))-1; //user provides number from 1..10 that needs to be internally
+                                                        //converted to a number from range 0 to 9
+
         if(row < 65 || (row > 74 && row < 97) || row > 106)
             throw new IllegalArgumentException("Row has to be a letter [Aa-Jj]. Got " + row);
         if(col < 0 || col > 9)
@@ -43,6 +44,6 @@ public class Coordinate {
 
     @Override
     public String toString() {
-        return String.valueOf((char) (row + 65)) + (col + shift);
+        return String.valueOf((char) (row + 65)) + (col + 1);
     }
 }
