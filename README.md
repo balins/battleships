@@ -9,6 +9,9 @@ Aplikacja obługuje następujące parametry:
 * `-mode [server|client]` - wskazuje tryb działania (jako serwer - przyjmuje połączenie, jako klient - nawiązuje połączenie z serwerem)
 * `-port N` - port, na którym aplikacja ma się komunikować.
 * `-map map-file` - ścieżka do pliku zawierającego mapę z rozmieszczeniem statków (format opisany w sekcji Mapa).
+* `-host ip-address` - (opcjonalny) adres IP:
+    * hosta, z którym aplikacja ma się połączyć w trybie klienta,
+    * pod którym aplikacja ma być dostępna w trybie serwera.
 
 ### Mapa
 * Mapa jest planszą 10x10, zawierającą opis położenia okrętów.
@@ -41,30 +44,30 @@ Objaśnienie: na tej mapie, okręty 1-masztowe znajdują się na pozycjach: A3, 
 * Komunikacja odbywa się z użyciem protokołu TCP, z kodowaniem UTF-8.
 * Klient i serwer wysyłają sobie na przemian _wiadomość_, która składa się z 2 części: _komendy_ i _współrzędnych_, odzielonych znakiem `;`, i zakończonych znakiem końca linii `\n`.
   * Format wiadomości: `komenda;współrzędne\n`
-  * Przykład wiadomości: `miss;D6\n`
+  * Przykład wiadomości: `MISS;D6\n`
 * Komendy i ich znaczenie:
   * _start_
     * komenda inicjująca rozgrywkę. 
     * Wysyła ją klient tylko raz, na początku.
-    * Przykład: `start;A1\n`
+    * Przykład: `START;A1\n`
   * _pudło_
     * odpowiedź wysyłana, gdy pod współrzędnymi otzymanymi od drugiej strony nie znajduje się żaden okręt.
-    * Przykład: `miss;A1\n`
+    * Przykład: `MISS;A1\n`
   * _trafiony_
     * opowiedź wysyłana, gdy pod współrzędnymi otzymanymi od drugiej strony znajduje się okręt, i nie jest to jego ostatni dotychczas nie trafiony segment.
-    * Przykład: `hit;A1\n`
+    * Przykład: `HIT;A1\n`
   * _trafiony zatopiony_
     * opowiedź wysyłana, gdy pod współrzędnymi otrzymanymi od drugiej strony znajduje się okręt, i trafiono ostatni jeszcze nie trafiony segment tego okrętu.
-    * Przykład: `sunk;A1\n`
+    * Przykład: `SUNK;A1\n`
   * _ostatni zatopiony_
     * opowiedź wysyłana, gdy pod współrzędnymi otrzymanymi od drugiej strony znajduje się okręt, i trafiono ostatni jeszcze nie trafiony segment okrętu całej floty w tej grze.
     * Jest to ostatnia komenda w grze. Strona wysyłająca ją przegrywa.
     * Przy tej komendzie nie podaje się współrzędnych strzału (już nie ma kto strzelać!). 
-    * Przykład: `last sunk\n`
+    * Przykład: `LAST_SUNK\n`
 * Możliwe (choć strategicznie nierozsądne) jest wielokrotne strzelanie w to samo miejsce. Należy wtedy odpowiadać zgodnie z aktualnym stanem planszy:
-  * `miss` w razie pudła,
-  * `hit` gdy okręt już był trafiony w to miejsce, ale nie jest jeszcze zatopiony,
-  * `sunk` gdy okręt jest już zatopiony.
+  * `MISS` w razie pudła,
+  * `HIT` gdy okręt już był trafiony w to miejsce, ale nie jest jeszcze zatopiony,
+  * `SUNK` gdy okręt jest już zatopiony.
 * Obsługa błędów:
   * W razie otrzymania niezrozumiałej komendy lub po 1 sekundzie oczekiwania, należy ponownie wysłać swoją ostatnią wiadomość. 
   * Po 3 nieudanej próbie, należy wyświelić komunikat `Communication error` i zakończyć działanie aplikacji.

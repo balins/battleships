@@ -20,13 +20,7 @@ public class Server extends AppClient {
 
         this.communicator = new Communicator(serverSocket.accept()); //blocking operation
 
-        boolean win = startPlayLoop(null);
-
-        if(win) {
-            win();
-        } else {
-            lose();
-        }
+        startPlayLoop(null);
 
         communicator.close();
     }

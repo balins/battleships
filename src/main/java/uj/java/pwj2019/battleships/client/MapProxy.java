@@ -77,12 +77,24 @@ public class MapProxy {
         explorer.traverse();
     }
 
+    public void uncoverUnknownEnemyFields() {
+        Coordinate c;
+
+        for(int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                c = new Coordinate(i, j);
+                if (enemyMap.getField(c) == Field.UNKNOWN)
+                    enemyMap.mark(c, Field.WATER);
+            }
+        }
+    }
+
     public void print() {
         System.out.println();
         Field[] row;
 
-        System.out.println("\t    Opponent's map\t\t\t\t\tYour map\n");
-        System.out.println("\t  1 2 3 4 5 6 7 8 9 10\t\t\t\t  1 2 3 4 5 6 7 8 9 10");
+        System.out.println("\t    Opponent's map\t\t\t\t    Your map\n");
+        System.out.println("\t  1 2 3 4 5 6 7 8 9 10\t\t\t      1 2 3 4 5 6 7 8 9 10");
 
         for (int i = 0; i < 10; i++) {
             System.out.print("\t");
@@ -92,7 +104,7 @@ public class MapProxy {
             for (var field : row)
                 System.out.print(" " + field.toString());
 
-            System.out.print("\t\t\t\t");
+            System.out.print("\t\t\t    ");
 
             System.out.print((char)(i+65));
             row = myMap.getRow(i);
@@ -104,7 +116,7 @@ public class MapProxy {
 
         System.out.println();
 
-        System.out.println("\t Segments left: " + enemyShipSegments + "/20\t\t\t\t Segments left: " + myShipSegments + "/20");
+        System.out.println("\t Segments left: " + enemyShipSegments + "/20\t\t\t     Segments left: " + myShipSegments + "/20");
 
         System.out.println();
     }

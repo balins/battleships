@@ -25,7 +25,7 @@ public abstract class AppClient {
 
     public abstract void start() throws IOException, InterruptedException;
 
-    protected boolean startPlayLoop(Coordinate myGuess) throws IOException, InterruptedException {
+    protected void startPlayLoop(Coordinate myGuess) throws IOException, InterruptedException {
         if(myGuess != null) {
             String msg = Command.START.toString() + ";" + myGuess.toString();
             communicator.send(msg);
@@ -64,7 +64,8 @@ public abstract class AppClient {
                     break;
                 case LAST_SUNK:
                     System.out.println("Last sunk... You won...");
-                    return true;
+                    win();
+                    return;
             }
 
             enemyGuess = new Coordinate(received[1]);
@@ -86,7 +87,8 @@ public abstract class AppClient {
                     System.out.println("sunk your last ship :'( *");
                     response = outcome.toString() + ";";
                     communicator.send(response);
-                    return false;
+                    lose();
+                    return;
             }
 
             myGuess = getMyGuess();
@@ -121,11 +123,8 @@ public abstract class AppClient {
         return c;
     }
 
-    protected void printEnemyContext(Command cmd) {
-
-    }
-
     protected void win() {
+        maps.uncoverUnknownEnemyFields();
         System.out.println();
         System.out.println("\t  --------------------------- YOU WIN ---------------------------");
         maps.print();

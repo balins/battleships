@@ -20,13 +20,7 @@ public class Client extends AppClient {
 
         Coordinate myGuess = getMyGuess();
 
-        boolean win = startPlayLoop(myGuess);
-
-        if(win) {
-            win();
-        } else {
-            lose();
-        }
+        startPlayLoop(myGuess);
 
         communicator.close();
     }

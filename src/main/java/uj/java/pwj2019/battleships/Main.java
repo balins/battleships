@@ -36,7 +36,9 @@ public class Main {
             System.err.println("You have to provide all three required arguments:\n" +
                     "\t-mode [server|client]\n" +
                     "\t-port port-number\n" +
-                    "\t-map path-to-map");
+                    "\t-map path-to-map\n" +
+                    "And optionally:\n" +
+                    "\t-host ip-address");
             System.err.println("Shutting down the application...");
             System.exit(-1);
         }
