@@ -2,7 +2,7 @@
 
 Należy napisać aplikację do gry w okręty przez sieć.
 
-Aplikacja łączy się z inną aplikacją, i rozgrywa partię gry w okręty.
+Aplikacja łączy się z inną aplikacją i rozgrywa partię gry w okręty.
 
 ### Parametry uruchomieniowe
 Aplikacja obługuje następujące parametry:
@@ -10,15 +10,15 @@ Aplikacja obługuje następujące parametry:
 * `-port N` - port, na którym aplikacja ma się komunikować.
 * `-map map-file` - ścieżka do pliku zawierającego mapę z rozmieszczeniem statków (format opisany w sekcji Mapa).
 * `-host ip-address` - (opcjonalny) adres IP:
-    * hosta, z którym aplikacja ma się połączyć w trybie klienta,
-    * pod którym aplikacja ma być dostępna w trybie serwera.
+    * hosta, z którym aplikacja ma się połączyć w trybie klienta (domyślnie localhost),
+    * pod którym aplikacja ma być dostępna w trybie serwera (domyślnie adres prywatny w sieci komputera).
 
 ### Mapa
-* Mapa jest planszą 10x10, zawierającą opis położenia okrętów.
+* Mapa jest planszą 10x10 zawierającą opis położenia okrętów.
 * `.` oznacza wodę, `#` oznacza okręt.
-* Wiersze oznacza się literami od A do J (z góry na dół), kolumny - liczbami od 1 do 10 (od lewej do prawej). 
+* Wiersze oznacza się literami od A do J (z góry na dół), kolumny - liczbami od 1 do 10 (od lewej do prawej).
 * Plansza powinna zawierać:
-  * 4 okręty o rozmiarze 1, 
+  * 4 okręty o rozmiarze 1,
   * 3 okręty o rozmiarze 2,
   * 2 okręty o rozmiarze 3,
   * 1 okręt o rozmiarze 4.
@@ -47,7 +47,7 @@ Objaśnienie: na tej mapie, okręty 1-masztowe znajdują się na pozycjach: A3, 
   * Przykład wiadomości: `MISS;D6\n`
 * Komendy i ich znaczenie:
   * _start_
-    * komenda inicjująca rozgrywkę. 
+    * komenda inicjująca rozgrywkę.
     * Wysyła ją klient tylko raz, na początku.
     * Przykład: `START;A1\n`
   * _pudło_
@@ -62,18 +62,17 @@ Objaśnienie: na tej mapie, okręty 1-masztowe znajdują się na pozycjach: A3, 
   * _ostatni zatopiony_
     * opowiedź wysyłana, gdy pod współrzędnymi otrzymanymi od drugiej strony znajduje się okręt, i trafiono ostatni jeszcze nie trafiony segment okrętu całej floty w tej grze.
     * Jest to ostatnia komenda w grze. Strona wysyłająca ją przegrywa.
-    * Przy tej komendzie nie podaje się współrzędnych strzału (już nie ma kto strzelać!). 
+    * Przy tej komendzie nie podaje się współrzędnych strzału (już nie ma kto strzelać!).
     * Przykład: `LAST_SUNK\n`
 * Możliwe (choć strategicznie nierozsądne) jest wielokrotne strzelanie w to samo miejsce. Należy wtedy odpowiadać zgodnie z aktualnym stanem planszy:
   * `MISS` w razie pudła,
   * `HIT` gdy okręt już był trafiony w to miejsce, ale nie jest jeszcze zatopiony,
   * `SUNK` gdy okręt jest już zatopiony.
 * Obsługa błędów:
-  * W razie otrzymania niezrozumiałej komendy lub po 1 sekundzie oczekiwania, należy ponownie wysłać swoją ostatnią wiadomość. 
+  * W razie otrzymania niezrozumiałej komendy lub po 1 sekundzie oczekiwania, należy ponownie wysłać swoją ostatnią wiadomość.
   * Po 3 nieudanej próbie, należy wyświelić komunikat `Communication error` i zakończyć działanie aplikacji.
 
 ### Działanie aplikacji
-* Po uruchomieniu (w dowolnym trybie), aplikacja powinna wyświetlić swoją mapę.
 * W czasie działania, aplikacja powinna wyświetlać wszystkie wysyłane i otrzymywane wiadomości.
 * Po zakończeniu rozgrywki, aplikacja powinna wyświetlić:
   * `Win\n` w razie wygranej, lub `Lose\n` w razie przegranej,
