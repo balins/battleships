@@ -1,3 +1,5 @@
+_Autorem specyfikacji jest @aresok_
+
 ## Gra w okręty
 
 Należy napisać aplikację do gry w okręty przez sieć.
