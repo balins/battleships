@@ -1,5 +1,8 @@
 # Battleships
 
+An implementation of classic paper game that is also knows as Battleship / Sea Battle.
+Written in plain Java, networking functions are realized by sockets.
+
 ## Quick start
 
 To run the application:
@@ -132,7 +135,7 @@ Objaśnienie: na tej mapie, okręty 1-masztowe znajdują się na pozycjach: A3, 
 ### Działanie aplikacji
 * W czasie działania, aplikacja powinna wyświetlać wszystkie wysyłane i otrzymywane wiadomości.
 * Po zakończeniu rozgrywki, aplikacja powinna wyświetlić:
-  * `Win\n` w razie wygranej, lub `Lose\n` w razie przegranej,
+  * Informację o wyniku rozgrywki (wygrana, przegrana)
   * W razie wygranej - pełną mapę przeciwnika,
   * W razie przegranej - mapę przeciwnika, z zastąpieniem nieznanych pól znakiem `?`. _Uwaga_: pola sąsiadujące z zatopionym okrętem należy uznać za odkryte (nie może się na nich znajdować inny okręt).
   * Pusty wiersz
