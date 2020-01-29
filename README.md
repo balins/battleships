@@ -25,6 +25,7 @@ The map is a 10x10 grid describing ships placement.
   * 3 ships of size of 2 cells,
   * 2 ships of size of 3 cells,
   * 1 ship of size of 4 cells.
+  
 Ships of size of 3 and 4 cells can be "curved", but every segment of such ship has to be connected with
 at least one other segment by one common side.
 
