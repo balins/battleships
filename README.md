@@ -27,7 +27,7 @@ The map is a 10x10 grid describing ships placement.
   * 1 ship of size of 4 cells.
   
 Ships of size of 3 and 4 cells can be "curved", but every segment of such ship has to be connected with
-at least one other segment by one common side.
+at least one other segment by a common side.
 
 Two different ships cannot have any mutual edges.
 
