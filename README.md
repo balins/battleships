@@ -1,3 +1,63 @@
+# Battleships
+
+An implementation of classic paper game that is also knows as Battleship / Sea Battle.
+Written in plain Java, networking functions are realized by sockets.
+
+## Quick start
+
+To run the application:
+* build using `mvn install`
+* run the application with following parameters:
+   * `-mode [server|client]` - server - accepts connections from clients; client - connects to server
+   * `-port N` - port number on which application will be listening for incoming connections in server mode
+   or communicate with server in client mode
+   * `-map map-file` - path to the file storing a map (proper map format is required)
+   * `-host ip-address` - (optional) IPv4 address that the application running in:
+         * server mode will be available to clients (default: the private IP address of computer in its network)
+         * client mode will try to connect to (default: localhost)
+
+After running two instances of the application (one as a server and one as a client) you can start the battle!
+
+## Map format
+
+The map is a 10x10 grid describing ships placement.
+* Rows are labeled by letters A through J (top to bottom), columns - by numbers 1 through 10 (left to right).
+* Water is labeled by `.`, ships are labeled by `#`.
+* The board has to contain:
+  * 4 ships of size of 1 cell,
+  * 3 ships of size of 2 cells,
+  * 2 ships of size of 3 cells,
+  * 1 ship of size of 4 cells.
+  
+Ships of size of 3 and 4 cells can be "curved", but every segment of such ship has to be connected with
+at least one other segment by a common side.
+
+Two different ships cannot have any mutual edges.
+
+Ships can be placed vertically and horizontally, but not diagonally.
+
+### Example map
+`map.txt`
+
+```
+..#.......
+#......#..
+#..#......
+..##......
+......##..
+.##.......
+.........#
+..##...#..
+.##....#.#
+.......#..
+```
+This particular map contains i.a. four one-masted ships placed on positions: A3, B8, G10 and I10.
+
+# Specification (PL)
+
+<sub>_Autorem oryginalnej specyfikacji jest [@areksokolowski](https://gitlab.com/areksokolowski)._
+_Została ona nieco zmodyfikowana ze względu na poszerzenie funkcjonalności aplikacji._</sub>
+
 ## Gra w okręty
 
 Należy napisać aplikację do gry w okręty przez sieć.
@@ -23,7 +83,7 @@ Aplikacja obługuje następujące parametry:
   * 2 okręty o rozmiarze 3,
   * 1 okręt o rozmiarze 4.
 * Okręty o rozmiarach 3-4 mogą być "łamane", ale poszczególne segmenty muszą się łączyć przynajmniej jednym bokiem.
-* Dwa okręty nie mogą się ze sobą stykać (także na ukos).
+* Dwa okręty nie mogą się ze sobą stykać bokami.
 
 Przykładowa mapa poniżej:
 ```
@@ -75,7 +135,7 @@ Objaśnienie: na tej mapie, okręty 1-masztowe znajdują się na pozycjach: A3, 
 ### Działanie aplikacji
 * W czasie działania, aplikacja powinna wyświetlać wszystkie wysyłane i otrzymywane wiadomości.
 * Po zakończeniu rozgrywki, aplikacja powinna wyświetlić:
-  * `Win\n` w razie wygranej, lub `Lose\n` w razie przegranej,
+  * Informację o wyniku rozgrywki (wygrana, przegrana)
   * W razie wygranej - pełną mapę przeciwnika,
   * W razie przegranej - mapę przeciwnika, z zastąpieniem nieznanych pól znakiem `?`. _Uwaga_: pola sąsiadujące z zatopionym okrętem należy uznać za odkryte (nie może się na nich znajdować inny okręt).
   * Pusty wiersz
