@@ -53,7 +53,7 @@ public class Main {
             port = InitHelper.parsePort(sPort);
             mapLines = InitHelper.loadMap(sMap);
         } catch (IllegalArgumentException e) {
-            System.err.println("Application can not be started due to following error:");
+            System.err.println("Application cannot be started due to following error:");
             System.err.println(e.getMessage());
             System.exit(-1);
         }
