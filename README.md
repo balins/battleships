@@ -1,6 +1,6 @@
 # Battleships
 
-This is implementation of classic paper game that is also knows as Sea Battle.
+This is my implementation of classic paper game that is also knows as Sea Battle.
 Written in plain Java, networking functions are realized by sockets.
 
 ## Quick start
